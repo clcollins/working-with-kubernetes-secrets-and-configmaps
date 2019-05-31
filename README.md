@@ -6,14 +6,14 @@ We will explore both Secrets and ConfigMaps with a real-world situation:
 
 Consider running the [Official MariaDB container image](https://hub.docker.com/_/mariadb) in Kubernetes.  Some configuration is expected to get the container to run.  The image required an environment variable to be set for one of `MYSQL_ROOT_PASSWORD`, `MYSQL_ALLOW_EMPTY_PASSWORD`, or `MYSQL_RANDOM_ROOT_PASSWORD`, in order to initialize the database.  It also allows for extensions to the MySQL Configuration file `my.cnf` by placing custom config files in `/etc/mysql/conf.d`.
 
-You could build a custom image, setting the environment variables and copying the configuration files into it, thereby creating a bespoke container image. However, it is considered practice to create and use generic images and add configuration to the containers themselves, and this is a perfect use-case for ConfigMaps and Secrets.  The `MYSQL_ROOT_PASSWORD` can be set in a Secret and added to the container as an environment variable, and the configuration files can be stored in a ConfigMap and mounted into the container as a files on startup.
+While it is possible to build a custom image, setting the environment variables and copying the configuration files into it, thereby creating a bespoke container image. However, it is considered practice to create and use generic images and add configuration to the containers themselves, and this is a perfect use-case for ConfigMaps and Secrets.  The `MYSQL_ROOT_PASSWORD` can be set in a Secret and added to the container as an environment variable, and the configuration files can be stored in a ConfigMap and mounted into the container as a files on startup.
 
 Let's try it out!
 
 
 ## Secrets
 
-Secrets are a Kubernetes object intended for storing a small amount of sensitive data.  It is worth noting that Secrets are stored base64-encoded within Kubernetes, so they are not wildly secure.  You should make sure to have appropriate [Role-base access controls](https://kubernetes.io/docs/reference/access-authn-authz/rbac/) (or RBAC) to protect access to secrets. Even so, extremely sensitive secret data should probably be stored using something like [HashiCorp Vault](https://www.vaultproject.io/).  For the root password of a MariaDB database, however, they are just fine.
+Secrets are a Kubernetes object intended for storing a small amount of sensitive data.  It is worth noting that Secrets are stored base64-encoded within Kubernetes, so they are not wildly secure.  Make sure to have appropriate [Role-base access controls](https://kubernetes.io/docs/reference/access-authn-authz/rbac/) (or RBAC) to protect access to secrets. Even so, extremely sensitive secret data should probably be stored using something like [HashiCorp Vault](https://www.vaultproject.io/).  For the root password of a MariaDB database, however, they are just fine.
 
 
 ### Creating a Secret manually
@@ -48,7 +48,7 @@ secret/mariadb-root-password created
 
 ### View the newly created Secret
 
-Now that the secret is created, you can use `kubectl describe` to see it.
+Now that the secret is created, use `kubectl describe` to see it.
 
 ```
 $ kubectl describe secret mariadb-root-password
@@ -65,7 +65,7 @@ password:  16 bytes
 
 Note the `Data` field contains the key we set in the YAML: `password`.  The value assigned to that key is the password we created, but it is not shown in the output.  Instead, the size of the value is shown in its place - in this case 16 bytes.
 
-You can also use `kubectl edit secret <secretname>` to view and edit the secret.  Editing the secret we created shows something like:
+The `kubectl edit secret <secretname>` command can also be used to view and edit the secret.  Editing the secret we created shows something like:
 
 ```
 # Please edit the object below. Lines beginning with a '#' will be ignored,
@@ -89,7 +89,7 @@ metadata:
 type: Opaque
 ```
 
-Again, you can see the `data` field with the `password` key, and this time the base64-encoded secret.
+Again, the `data` field with the `password` key is visible, and this time the base64-encoded secret.
 
 
 ### Decode the Secret
@@ -110,7 +110,7 @@ KubernetesRocks!
 
 ### Another way to create Secrets
 
-You can also create Secrets directly using the `kubectl create secret` command.  The MariaDB image also allows for setting up a regular database user with a password by setting the `MYSQL_USER` and `MYSQL_PASSWORD` environment variables.  A Secret can hold more than one key/value pair, so we can create a single Secret to hold both strings.  As a bonus, by using `kubectl create secret`, we can let Kubernetes mess with base64 for us, so we don't have to.
+It is also possible to create Secrets directly using the `kubectl create secret` command.  The MariaDB image also allows for setting up a regular database user with a password by setting the `MYSQL_USER` and `MYSQL_PASSWORD` environment variables.  A Secret can hold more than one key/value pair, so we can create a single Secret to hold both strings.  As a bonus, by using `kubectl create secret`, we can let Kubernetes mess with base64 for us, so we don't have to.
 
 ```
 $ kubectl create secret generic mariadb-user-creds \
@@ -121,7 +121,7 @@ secret/mariadb-user-creds created
 
 Note the use of `--from-literal`.  That sets the key name and the value all in one.  We can pass as many `--from-literal` arguments as needed, to create one or more key/value pairs in the secret.
 
-You can validate that the username and password were created and stored correctly with the `kubectl get secrets` command, again:
+Validate that the username and password were created and stored correctly with the `kubectl get secrets` command, again:
 
 ```
 # Get the username
@@ -139,7 +139,7 @@ ConfigMaps are similar to Secrets.  They can be created in the same ways, and ca
 
 ### Create a ConfigMap
 
-ConfigMaps can be created the same ways Secrets are.  You can manually create a YAML representation of the ConfigMap and load it into Kubernetes, or you can use the `kubectl create configmap` command.  In the next example, we'll create a ConfigMap using the latter method, but this time, instead of passing literal strings as we did with `--from-literal=<key>=<string>` for the Secret above, we'll create a ConfigMap from an existing file - a MySQL config intended for `/etc/mysql/conf.d` in the container. For this exercise, we will override the "max_allowed_packet" setting for MariaDB, set to 16M by default, with this config file.
+ConfigMaps can be created the same ways Secrets are.  A YAML representation of the ConfigMap can be written manually and loaded it into Kubernetes, or the `kubectl create configmap` command can be used to create it from the command line.  In the next example, we'll create a ConfigMap using the latter method, but this time, instead of passing literal strings as we did with `--from-literal=<key>=<string>` for the Secret above, we'll create a ConfigMap from an existing file - a MySQL config intended for `/etc/mysql/conf.d` in the container. For this exercise, we will override the "max_allowed_packet" setting for MariaDB, set to 16M by default, with this config file.
 
 First, create a file named `max_allowed_packet.cnf` with the following content:
 
@@ -172,7 +172,7 @@ NAME             DATA      AGE
 mariadb-config   1         9m
 ```
 
-You can see the contents of the ConfigMap with the `kubectl describe` command.  Note that the full contents of the file is visible, and that the keyname is in fact the file name, `max_allowed_packet.cnf`.
+The contents of the ConfigMap can be viewed with the `kubectl describe` command.  Note that the full contents of the file is visible, and that the keyname is in fact the file name, `max_allowed_packet.cnf`.
 
 ```
 $ kubectl describe cm mariadb-config
@@ -192,7 +192,7 @@ max_allowed_packet = 64M
 Events:  <none>
 ```
 
-A ConfigMap can be edited live within Kubernetes with the `kubectl edit` command.  Doing so will open a buffer with your default editor, showing the contents of the ConfigMap as YAML.  When you save your changes, the changes will be immediately live in Kubernetes.  While not really the _best_ practice, it can be handy for testing things in development.
+A ConfigMap can be edited live within Kubernetes with the `kubectl edit` command.  Doing so will open a buffer with the default editor, showing the contents of the ConfigMap as YAML.  When changes are saved, they will be immediately live in Kubernetes.  While not really the _best_ practice, it can be handy for testing things in development.
 
 Let's say we really wanted a "max_allowed_packet" value of 32M instead of the default 16M or the 64M in the `max_allowed_packet.cnf` file.  Use `kubectl edit configmap mariadb-config` to edit the value:
 
@@ -322,7 +322,7 @@ It is also possible to set environment variables from _all_ key/value pairs in a
 
 `envFrom` is a list of sources for Kubernetes to take environment variables.  Again, we're using `secretRef`, this time to specify "mariadb-user-creds" as the source of the environment variables.  That's it!  All the keys and values in the secret will be added as environment variables in the container.
 
-You should now have a container spec that looks like this:
+The container spec should now look like this:
 
 ```
 spec:
@@ -348,7 +348,10 @@ spec:
 
 __Note:__  We could have just added the "mysql-root-password" secret to the `envFrom` list and let it be parsed as well, as long as the "password" key was named "MYSQL_ROOT_PASSWORD" instead.  There is not a way to manually specify the environment variable name with `envFrom` the way we did with `env`.
 
-As mentioned above, you can use both `env` and `envFrom` to share ConfigMap key/value pairs with a container as well.  In the case of our ConfigMap "mariadb-config", though, we have an entire file stored as the value to our key, and the file needs to exist in the filesystem of the container for MariaDB to be able to use it.  Luckily, both Secrets and ConfigMaps be the source of Kubernetes "volumes" and mounted into the containers, instead of using a filesystem or block device as the volume to be mounted.
+
+### Adding the max_allowed_packet.cnf file to the Deployment as a volumeMount
+
+As mentioned above, both `env` and `envFrom` can be used to share ConfigMap key/value pairs with a container as well.  In the case of our ConfigMap "mariadb-config", though, we have an entire file stored as the value to our key, and the file needs to exist in the filesystem of the container for MariaDB to be able to use it.  Luckily, both Secrets and ConfigMaps be the source of Kubernetes "volumes" and mounted into the containers, instead of using a filesystem or block device as the volume to be mounted.
 
 Our mariadb-deployment.yaml already has a volume and volumeMount specified, an `emptyDir` (effectively, temporary or ephemeral) volume being mounted to `/var/lib/mysql` to store the MariaDB data:
 
@@ -404,7 +407,7 @@ Then, in the `volumes` list, `configMap` tells Kubernetes to use the "mariadb-co
 _Note:_ The `path` from the `configMap` is the name of a file that will contain the contents of the key's value.  In this case, our key was a file name, too, but it does not need to be.  Note also that `items` is a list, so multiple keys can be referenced and their values mounted as files. These files will all be created in the `mountPath` of the `volumeMount` specified above: `/etc/mysql/conf.d`.
 
 
-### Creating a MariaDB instance from the Deployment
+## Creating a MariaDB instance from the Deployment
 
 At this point we should have enough to create a MariaDB instance.  There are two Secrets, one holding the `MYSQL_ROOT_PASSWORD` and another storing the `MYSQL_USER` and `MYSQL_PASSWORD` environment variables to be added to the container.  We also have a ConfigMap holding the contents of a MySQL config file that overrides the `max_allowed_packed` value from its default setting.
 
@@ -458,6 +461,9 @@ spec:
         name: mariadb-config-volume
 ```
 
+
+### Create the MariaDB instance
+
 Create a new MariaDB instance from the YAML file with the `kubectl create` command:
 
 ```
@@ -465,11 +471,20 @@ $ kubectl create -f mariadb-deployment.yaml
 deployment.apps/mariadb-deployment created
 ```
 
+Once the deployment has been created, use the `kubectl get` command to view the running MariaDB pod.
+
 ```
-$ kubectl get po
+$ kubectl get pods
 NAME                                  READY     STATUS    RESTARTS   AGE
 mariadb-deployment-5465c6655c-7jfqm   1/1       Running   0          3m
 ```
+
+Make a note of the pod name (in this example, it's `mariadb-deployment-5465c6655c-7jfqm`).  Note that the pod name will differ from the example here.
+
+
+### Verify the instance is using the Secrets and ConfigMap
+
+Using the pod name from above, use the `kubectl exec` command to validate that the Secrets and ConfigMaps are in use.  For example, check the environment variables are exposed in the container:
 
 ```
 $ kubectl exec -it mariadb-deployment-5465c6655c-7jfqm env |grep MYSQL
@@ -477,6 +492,10 @@ MYSQL_PASSWORD=kube-still-rocks
 MYSQL_USER=kubeuser
 MYSQL_ROOT_PASSWORD=KubernetesRocks!
 ```
+
+Success!  All three environment variables, the one using the `env` setup to specify the secret, and two using `envFrom` to just mount all the values from the Secret, are available in the container for MariaDB to use.
+
+Spot-check that the "max_allowed_packet.cnf" file was created in `/etc/mysql/conf.d`, and that it contains the expected content:
 
 ```
 $ kubectl exec -it mariadb-deployment-5465c6655c-7jfqm ls /etc/mysql/conf.d
@@ -487,4 +506,31 @@ $ kubectl exec -it mariadb-deployment-5465c6655c-7jfqm cat /etc/mysql/conf.d/max
 max_allowed_packet = 32M
 ```
 
-TODO: Conclusion
+Finally, let's validate that MariaDB used the environment variable to set the root user password, and read the max_allowed_packet.cnf file to set the `max_allowed_packet` configuration variable.  Use the `kubectl exec` command again, this time to get a shell inside the running container and use it to run some `mysql` commands:
+
+```
+$ kubectl exec -it mariadb-deployment-5465c6655c-7jfqm /
+bin/sh
+
+# Check that the root password was set correctly
+$ mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e 'show databases;'
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
++--------------------+
+
+# Check that the max_allowed_packet.cnf was parsed
+$ mysql -uroot -p${MYSQL_ROOT_PASSWORD} -e "SHOW VARIABLES LIKE 'max_allowed_packet';"
++--------------------+----------+
+| Variable_name      | Value    |
++--------------------+----------+
+| max_allowed_packet | 33554432 |
++--------------------+----------+
+```
+
+## Conclusion
+
+In this exercise, we learned how to create Kubernetes Secrets and ConfigMaps.  We also learned how to use those Secrets and ConfigMaps, by adding them as environment variables or files inside of a running container instance.  This makes it easy to keep the configuration of individual instances of containers separate from the container image itself.  By separating this configuration data, overhead is reduced to maintaining only a single image for a specific type of instance, while retaining the flexibility to create instances with a wide variety of configurations.
