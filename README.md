@@ -446,7 +446,7 @@ spec:
         - mountPath: /var/lib/mysql
           name: mariadb-volume-1
         - mountPath: /etc/mysql/conf.d
-          name: mariadb-config
+          name: mariadb-config-volume
       volumes:
       - emptyDir: {}
         name: mariadb-volume-1
@@ -461,6 +461,30 @@ spec:
 Create a new MariaDB instance from the YAML file with the `kubectl create` command:
 
 ```
+$ kubectl create -f mariadb-deployment.yaml
+deployment.apps/mariadb-deployment created
+```
 
+```
+$ kubectl get po
+NAME                                  READY     STATUS    RESTARTS   AGE
+mariadb-deployment-5465c6655c-7jfqm   1/1       Running   0          3m
+```
+
+```
+$ kubectl exec -it mariadb-deployment-5465c6655c-7jfqm env |grep MYSQL
+MYSQL_PASSWORD=kube-still-rocks
+MYSQL_USER=kubeuser
+MYSQL_ROOT_PASSWORD=KubernetesRocks!
+```
+
+```
+$ kubectl exec -it mariadb-deployment-5465c6655c-7jfqm ls /etc/mysql/conf.d
+max_allowed_packet.cnf
+
+$ kubectl exec -it mariadb-deployment-5465c6655c-7jfqm cat /etc/mysql/conf.d/max_allowed_packet.cnf
+[mysqld]
+max_allowed_packet = 32M
+```
 
 TODO: Conclusion
