@@ -103,8 +103,8 @@ It is easy to decode the secret by extracting the value and piping it to base64.
 $ kubectl get secret mariadb-root-password -o jsonpath='{.data.password}'
 S3ViZXJuZXRlc1JvY2tzIQ==
 
-# Pipe it to `base64 -d -` to decode:
-$ kubectl get secret mariadb-root-password -o jsonpath='{.data.password}' | base64 -d -
+# Pipe it to `base64 --decode -` to decode:
+$ kubectl get secret mariadb-root-password -o jsonpath='{.data.password}' | base64 --decode -
 KubernetesRocks!
 ```
 
@@ -125,11 +125,11 @@ Validate that the username and password were created and stored correctly with t
 
 ```
 # Get the username
-$ kubectl get secret mariadb-user-creds -o jsonpath='{.data.MYSQL_USER}' | base64 -d -
+$ kubectl get secret mariadb-user-creds -o jsonpath='{.data.MYSQL_USER}' | base64 --decode -
 kubeuser
 
 # Get the password
-$ kubectl get secret mariadb-user-creds -o jsonpath='{.data.MYSQL_PASSWORD}' | base64 -d -
+$ kubectl get secret mariadb-user-creds -o jsonpath='{.data.MYSQL_PASSWORD}' | base64 --decode -
 kube-still-rocks
 ```
 
