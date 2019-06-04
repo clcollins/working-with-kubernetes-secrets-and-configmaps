@@ -11,6 +11,20 @@ While it is possible to build a custom image, setting the environment variables 
 Let's try it out!
 
 
+## A note about Kubectl versions
+
+Make sure that your version of the `kubectl` client command is the same or newer than the Kubernetes cluster version in use.
+
+An error along the lines of: `error: SchemaError(io.k8s.api.admissionregistration.v1beta1.ServiceReference): invalid object doesn't have additional properties`, may mean the client version is too old and needs to be upgraded.  Docker for Mac also installs its own version of `kubectl`, and that may be the issue.  If so, a current client can be installed with `brew install` and the symlink to the client shipped by Docker replaced:
+
+```
+$ rm /usr/local/bin/kubectl
+$ brew link --overwrite kubernetes-cli
+```
+
+The newer `kubectl` client should continue to work with the Docker Kubernetes version.
+
+
 ## Secrets
 
 Secrets are a Kubernetes object intended for storing a small amount of sensitive data.  It is worth noting that Secrets are stored base64-encoded within Kubernetes, so they are not wildly secure.  Make sure to have appropriate [Role-base access controls](https://kubernetes.io/docs/reference/access-authn-authz/rbac/) (or RBAC) to protect access to secrets. Even so, extremely sensitive secret data should probably be stored using something like [HashiCorp Vault](https://www.vaultproject.io/).  For the root password of a MariaDB database, however, they are just fine.
