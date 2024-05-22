@@ -1,3 +1,5 @@
+#This repository is archived and will no longer receive updates.
+
 # Working with Kubernetes Secrets and ConfigMaps
 
 Kubernetes has two types of objects that can be used to inject configuration data into a container when it starts up: Secrets and ConfigMaps.  Secrets and ConfigMaps behave similarly in Kubernetes, both in the way they are created, and in that both can be exposed inside a container as either mounted files or volumes, or as environment variables.
